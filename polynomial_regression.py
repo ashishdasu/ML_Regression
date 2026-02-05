@@ -189,6 +189,77 @@ def plot_regularization_curves(ridge_results):
     plt.tight_layout()
     plt.show()
 
+
+def select_best_model(degree_results, ridge_results):
+    '''
+    Select best model based on validation MSE.
+    Compares all polynomial models and ridge models.
+    '''
+    print('\n' + '~'*60)
+    print('Model Selection (Part 2c)')
+    print('~'*60)
+    
+    best_mse = float('inf')
+    best_model_info = None
+    
+    # Check polynomial models (no regularization)
+    for result in degree_results:
+        if result['val_mse'] < best_mse:
+            best_mse = result['val_mse']
+            best_model_info = {
+                'type': 'polynomial',
+                'degree': result['degree'],
+                'alpha': 0,
+                'model': result['model'],
+                'scaler': result['scaler'],
+                'poly': result['poly'],
+                'val_mse': result['val_mse']
+            }
+    
+    # Check ridge models
+    for degree in [3, 4, 5]:
+        for result in ridge_results[degree]:
+            if result['val_mse'] < best_mse:
+                best_mse = result['val_mse']
+                best_model_info = {
+                    'type': 'ridge',
+                    'degree': degree,
+                    'alpha': result['alpha'],
+                    'model': result['model'],
+                    'scaler': result['scaler'],
+                    'poly': result['poly'],
+                    'val_mse': result['val_mse']
+                }
+    
+    print(f'\nBest Model:')
+    print(f'  Type: {best_model_info["type"]}')
+    print(f'  Degree: {best_model_info["degree"]}')
+    print(f'  Alpha: {best_model_info["alpha"]}')
+    print(f'  Validation MSE: {best_model_info["val_mse"]:.6f}')
+    
+    return best_model_info
+
+def evaluate_on_test(best_model_info, X_test, y_test):
+    '''Evaluate best model on test set.'''
+    model = best_model_info['model']
+    scaler = best_model_info['scaler']
+    poly = best_model_info['poly']
+    
+    # Transform test data
+    X_test_scaled = scaler.transform(X_test)
+    X_test_poly = poly.transform(X_test_scaled)
+    
+    # Predict
+    y_test_pred = model.predict(X_test_poly)
+    test_mse = compute_mse(y_test, y_test_pred)
+    
+    print(f'\n' + '~'*60)
+    print('Test Set Performance')
+    print('~'*60)
+    print(f'Test MSE: {test_mse:.6f}')
+    
+    return test_mse
+
 if __name__ == '__main__':
     X_train, y_train, X_val, y_val, X_test, y_test = load_airfoil_data()
     
@@ -203,3 +274,7 @@ if __name__ == '__main__':
     # Part 2(b): Ridge regularization analysis
     ridge_results = analyze_ridge_regularization(X_train, y_train, X_val, y_val)
     plot_regularization_curves(ridge_results)
+    
+    # Part 2(c): Select best model and evaluate on test set
+    best_model = select_best_model(degree_results, ridge_results)
+    test_mse = evaluate_on_test(best_model, X_test, y_test)
