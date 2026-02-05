@@ -104,6 +104,91 @@ def run_degree_analysis(X_train, y_train, X_val, y_val):
     
     return results
 
+
+def train_ridge_model(X_train, y_train, X_val, y_val, degree, alpha):
+    '''
+    Train Ridge regression model with L2 regularization.
+    Same as polynomial model but uses Ridge instead of LinearRegression.
+    '''
+    # Normalize features
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val)
+    
+    # Polynomial features
+    poly = PolynomialFeatures(degree=degree, include_bias=False)
+    X_train_poly = poly.fit_transform(X_train_scaled)
+    X_val_poly = poly.transform(X_val_scaled)
+    
+    # Fit Ridge model
+    model = Ridge(alpha=alpha)
+    model.fit(X_train_poly, y_train)
+    
+    # Predictions and MSE
+    y_train_pred = model.predict(X_train_poly)
+    y_val_pred = model.predict(X_val_poly)
+    
+    train_mse = compute_mse(y_train, y_train_pred)
+    val_mse = compute_mse(y_val, y_val_pred)
+    
+    return model, scaler, poly, train_mse, val_mse
+
+def analyze_ridge_regularization(X_train, y_train, X_val, y_val):
+    '''
+    Analyze effect of L2 regularization on polynomial models.
+    Tests degrees 3, 4, 5 with different alpha values.
+    '''
+    print('\n' + '~'*60)
+    print('Ridge Regularization Analysis (Part 2b)')
+    print('~'*60)
+    
+    degrees = [3, 4, 5]
+    alphas = [0, 0.001, 0.01, 0.1, 1, 10]
+    
+    results = {}
+    
+    for degree in degrees:
+        results[degree] = []
+        print(f'\nDegree {degree}:')
+        print('~' * 40)
+        
+        for alpha in alphas:
+            model, scaler, poly, train_mse, val_mse = train_ridge_model(
+                X_train, y_train, X_val, y_val, degree, alpha
+            )
+            
+            results[degree].append({
+                'alpha': alpha,
+                'model': model,
+                'scaler': scaler,
+                'poly': poly,
+                'train_mse': train_mse,
+                'val_mse': val_mse
+            })
+            
+            print(f'  Alpha {alpha:6.3f}: Train MSE = {train_mse:.6f}, Val MSE = {val_mse:.6f}')
+    
+    return results
+
+def plot_regularization_curves(ridge_results):
+    '''Plot validation error vs alpha for each degree.'''
+    plt.figure(figsize=(10, 6))
+    
+    for degree in [3, 4, 5]:
+        alphas = [r['alpha'] for r in ridge_results[degree]]
+        val_mses = [r['val_mse'] for r in ridge_results[degree]]
+        
+        plt.plot(alphas, val_mses, marker='o', label=f'Degree {degree}', linewidth=2)
+    
+    plt.xscale('log')
+    plt.xlabel('Alpha (Regularization Strength)', fontsize=11)
+    plt.ylabel('Validation MSE', fontsize=11)
+    plt.title('Ridge Regularization: Validation Error vs Alpha', fontsize=13)
+    plt.legend(fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == '__main__':
     X_train, y_train, X_val, y_val, X_test, y_test = load_airfoil_data()
     
@@ -114,3 +199,7 @@ if __name__ == '__main__':
     
     # Part 2(a): Polynomial degree analysis
     degree_results = run_degree_analysis(X_train, y_train, X_val, y_val)
+    
+    # Part 2(b): Ridge regularization analysis
+    ridge_results = analyze_ridge_regularization(X_train, y_train, X_val, y_val)
+    plot_regularization_curves(ridge_results)
