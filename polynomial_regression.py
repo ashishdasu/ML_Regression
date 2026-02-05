@@ -174,13 +174,14 @@ def plot_regularization_curves(ridge_results):
     '''Plot validation error vs alpha for each degree.'''
     plt.figure(figsize=(10, 6))
     
-    for degree in [3, 4, 5]:
-        alphas = [r['alpha'] for r in ridge_results[degree]]
-        val_mses = [r['val_mse'] for r in ridge_results[degree]]
-        
-        plt.plot(alphas, val_mses, marker='o', label=f'Degree {degree}', linewidth=2)
+    alpha_labels = ['0', '0.001', '0.01', '0.1', '1', '10']
+    x_positions = range(len(alpha_labels))
     
-    plt.xscale('log')
+    for degree in [3, 4, 5]:
+        val_mses = [r['val_mse'] for r in ridge_results[degree]]
+        plt.plot(x_positions, val_mses, marker='o', label=f'Degree {degree}', linewidth=2)
+    
+    plt.xticks(list(x_positions), alpha_labels)
     plt.xlabel('Alpha (Regularization Strength)', fontsize=11)
     plt.ylabel('Validation MSE', fontsize=11)
     plt.title('Ridge Regularization: Validation Error vs Alpha', fontsize=13)
