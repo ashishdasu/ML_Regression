@@ -212,6 +212,42 @@ def run_linear_model(X_train, y_train, X_test, y_test, degree=1):
         'gd': results_gd
     }
 
+def plot_fits(X_train, y_train, X_test, y_test, results, degree):
+    '''
+    Plot data points and fitted curves from both methods.
+    
+    Args:
+        X_train, y_train: training data
+        X_test, y_test: testing data
+        results: dictionary from run_linear_model
+        degree: polynomial degree
+    '''
+    plt.figure(figsize=(12, 6))
+    
+    # Plot data points
+    plt.scatter(X_train, y_train, c='blue', alpha=0.5, label='Training Data', s=30)
+    plt.scatter(X_test, y_test, c='red', alpha=0.5, label='Testing Data', s=30)
+    
+    # Generate smooth curve for plotting
+    x_range = np.linspace(X_train.min(), X_train.max(), 300)
+    X_range_design = construct_design_matrix(x_range, degree)
+    
+    # Plot closed-form fit
+    y_closed = X_range_design @ results['theta_closed']
+    plt.plot(x_range, y_closed, 'g-', linewidth=2, label='Closed-Form', alpha=0.8)
+    
+    # Plot gradient descent fit
+    y_gd = X_range_design @ results['theta_gd']
+    plt.plot(x_range, y_gd, 'm--', linewidth=2, label='Gradient Descent', alpha=0.8)
+    
+    plt.xlabel('x', fontsize=12)
+    plt.ylabel('y', fontsize=12)
+    plt.title(f'Polynomial Regression (Degree {degree})', fontsize=14, fontweight='bold')
+    plt.legend(fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     # Load data
     X_train, y_train, X_test, y_test = load_data()
