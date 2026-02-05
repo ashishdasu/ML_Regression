@@ -51,7 +51,7 @@ def construct_design_matrix(X, degree):
         Design matrix with shape (N, degree+1)
         First column is all 1s (for intercept), then x, x^2, x^3, ...
     '''
-    
+
     N = len(X)
     design_matrix = np.zeros((N, degree + 1))
     
@@ -69,6 +69,24 @@ def compute_mse(y_true, y_pred):
     '''
     return np.mean((y_true - y_pred) ** 2)
 
+def closed_form_solution(X, y):
+    '''
+    Compute closed-form solution for linear regression.
+    
+    Formula: theta = (X^T X)^(-1) X^T y
+    
+    Args:
+        X: design matrix (N x (degree+1))
+        y: target values (N,)
+    
+    Returns:
+        theta: coefficients (degree+1,)
+    '''
+    # theta = (X^T X)^(-1) X^T y
+    theta = np.linalg.inv(X.T @ X) @ X.T @ y
+    
+    return theta
+    
 
 if __name__ == "__main__":
     # Load data
